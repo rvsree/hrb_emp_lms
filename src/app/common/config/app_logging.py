@@ -1,23 +1,16 @@
 """
-Enhanced logging configuration with color schemes for text within [square brackets] and success keywords.
+Enhanced logging configuration with color schemes for MCP server.
 
 Color Scheme:
 - Entire line: Gray/White (default colorlog colors - preserved exactly)
 - Text within [square brackets] in MESSAGE part only: Colored with specified colors
-  - WHITE: FOUNDRY, CONTEXT
-  - BLUE: Agents (ORCHESTRATOR, SUPERVISOR, REVIEWER, ENGINE, REACT_ENGINE, REACT_AGENT, SINGLE_AGENT, MULTI_AGENT)
-  - GOLD: NLP (CLASSIFIER, COT_THOUGHT, WORKFLOW, HITL, PROACTIVE)
-  - BRIGHT_ORANGE/GOLD: MCP keywords (MCP_AGENT, HRB_SERVICE, MCP, MCP_SERVER, MCP_PROTOCOL, LEAVE_MCP, FUNCTION_TOOL, LLM_TOOL, TOOL)
-  - YELLOW: REST_API_MCP, Database calls (REPO, DB, DATABASE, POSTGRES, SQLITE, CHROMADB, HR_CHATBOT_DB, STM_DB, LTM_DB)
-  - CYAN: NLP (INTENT, UNDERSTAND, DECOMPOSE, ENHANCE, ROUTER)
-  - GREEN: Success (SUCCESS, TRACE ✓, brackets containing "200" or "success", and text containing "status=success" or "| 200 |")
+  - BRIGHT_ORANGE: MCP keywords ([MCP], [AUTH], [REQUEST], [TOOLS], [TOOL_CALL], [TOOL_EXEC], [TOOL_RESULT], [RESPONSE])
+  - GREEN: Success (SUCCESS, brackets containing "200" or "success", and text containing "status=success" or "| 200 |")
   - RED: Errors (ERROR, CRITICAL, FAILED, FAILURE)
   - MAGENTA: Warnings (WARNING, WARN, FALLBACK, RETRY, TIMEOUT)
-  - MILD PURPLE: LLM_DEBUG
 
 IMPORTANT: Only colorizes brackets in the MESSAGE part, not in formatted parts like [%(name)s] or [%(levelname)s]
 Also skips ANSI codes like [37m, [0m, [31m, etc.
-Also colorizes success keywords in text (status=success, | 200 |) even if not in brackets.
 """
 
 import logging
@@ -35,21 +28,15 @@ except ImportError:
 class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE else logging.Formatter):
     """
     Enhanced colored formatter that colors only text within [square brackets] in the MESSAGE part,
-    and success keywords in text, while keeping the rest of the line in default gray/white colors from colorlog.
+    while keeping the rest of the line in default gray/white colors from colorlog.
+    Simplified for MCP server use.
     """
     
     # ANSI color codes - specified colors
     GREEN = '\033[38;5;77m'      # Soft green (gentle) - Success
-    BLUE = '\033[38;5;75m'       # Soft blue (gentle) - Agents
     MAGENTA = '\033[38;5;171m'   # Soft magenta (gentle) - Warnings
-    YELLOW = '\033[38;2;128;113;102m'  # Custom color #807166 - REST_API_MCP, Database calls
-    GOLD = '\033[38;2;138;112;55m'  # Custom color #8A7037 - NLP (CLASSIFIER, COT_THOUGHT, WORKFLOW, HITL, PROACTIVE)
     BRIGHT_ORANGE = '\033[38;5;208m'  # Bright orange - MCP keywords
-    BROWN = '\033[38;5;130m'     # Brown (gentle) - Backend Services/Tools (replaced with BRIGHT_ORANGE)
     RED = '\033[38;5;203m'       # Soft red (gentle) - Errors
-    CYAN = '\033[38;5;87m'       # Soft cyan (gentle) - NLP (INTENT, UNDERSTAND, DECOMPOSE, ENHANCE, ROUTER)
-    WHITE = '\033[97m'           # White - FOUNDRY, CONTEXT
-    PURPLE = '\033[38;5;141m'    # Mild purple (gentle) - LLM_DEBUG
     RESET = '\033[0m'
     
     # Patterns for text within [square brackets] - RED
@@ -76,79 +63,18 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
         r"\[EMPTY\]",
     ]
     
-    # Patterns for text within [square brackets] - BLUE (Agents only)
-    AGENT_BRACKET_PATTERNS = [
-        r"\[ORCHESTRATOR\]",
-        r"\[SUPERVISOR\]",
-        r"\[REVIEWER\]",
-        r"\[ENGINE\]",
-        r"\[REACT_ENGINE\]",
-        r"\[REACT_AGENT\]",
-        r"\[SINGLE_AGENT\]",
-        r"\[MULTI_AGENT\]",
-    ]
-    
-    # Patterns for text within [square brackets] - WHITE (FOUNDRY, CONTEXT)
-    WHITE_BRACKET_PATTERNS = [
-        r"\[FOUNDRY\]",
-        r"\[CONTEXT\]",
-    ]
-    
-    # Patterns for text within [square brackets] - GOLD (NLP - CLASSIFIER, COT_THOUGHT, WORKFLOW, HITL, PROACTIVE)
-    GOLD_BRACKET_PATTERNS = [
-        r"\[CLASSIFIER\]",
-        r"\[COT_THOUGHT\]",
-        r"\[WORKFLOW\]",
-        r"\[HITL\]",
-        r"\[PROACTIVE\]",
-    ]
-    
-    # Patterns for text within [square brackets] - CYAN (NLP - INTENT, UNDERSTAND, DECOMPOSE, ENHANCE, ROUTER)
-    NLP_BRACKET_PATTERNS = [
-        r"\[INTENT\]",
-        r"\[UNDERSTAND\]",
-        r"\[DECOMPOSE\]",
-        r"\[ENHANCE\]",
-        r"\[ROUTER\]",
-    ]
-    
     # Patterns for text within [square brackets] - BRIGHT_ORANGE (MCP keywords)
     MCP_BRACKET_PATTERNS = [
-        r"\[MCP_AGENT\]",
-        r"\[HRB_SERVICE\]",
         r"\[MCP\]",
         r"\[MCP_SERVER\]",
         r"\[MCP_PROTOCOL\]",
-        r"\[LEAVE_MCP\]",
-        r"\[FUNCTION_TOOL\]",
-        r"\[LLM_TOOL\]",
-        r"\[TOOL\]",
+        r"\[AUTH\]",
         r"\[REQUEST\]",
+        r"\[TOOLS\]",
         r"\[TOOL_CALL\]",
         r"\[TOOL_EXEC\]",
         r"\[TOOL_RESULT\]",
         r"\[RESPONSE\]",
-        r"\[AUTH\]",
-        r"\[TOOLS\]",
-    ]
-    
-    # Patterns for text within [square brackets] - YELLOW (REST_API_MCP, Database calls)
-    YELLOW_BRACKET_PATTERNS = [
-        r"\[REST_API_MCP\]",
-        r"\[REPO\]",
-        r"\[DB\]",
-        r"\[DATABASE\]",
-        r"\[POSTGRES\]",
-        r"\[SQLITE\]",
-        r"\[CHROMADB\]",
-        r"\[HR_CHATBOT_DB\]",
-        r"\[STM_DB\]",
-        r"\[LTM_DB\]",
-    ]
-    
-    # Patterns for text within [square brackets] - PURPLE (LLM_DEBUG)
-    PURPLE_BRACKET_PATTERNS = [
-        r"\[LLM_DEBUG\]",
     ]
     
     # Patterns for text within [square brackets] - GREEN (Success only)
@@ -175,8 +101,6 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
         Colorize ONLY UPPER CASE text within [square brackets] in the MESSAGE part.
         Preserves colorlog's default grey/white formatting for the rest of the line.
         Skips ANSI codes, formatted parts, and lowercase text.
-        
-        THUMB RULE: Only colorize UPPER CASE text in brackets, preserve grey/white for everything else.
         """
         # IMPORTANT: Protect ANSI escape sequences from being matched as brackets
         # ANSI escape sequences are: \033[ followed by numbers and 'm'
@@ -225,19 +149,12 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
             # Order matters - check more specific patterns first
             color = None
             
-            # Check WHITE patterns first (FOUNDRY, CONTEXT) - highest priority
-            for pattern in self.WHITE_BRACKET_PATTERNS:
-                if re.search(pattern, bracket_content, re.IGNORECASE):
-                    color = self.WHITE
-                    break
-            
             # Check SUCCESS patterns early (high priority - 200, success keywords)
             # This should be checked before other patterns to ensure success indicators are colored green
-            if not color:
-                for pattern in self.SUCCESS_BRACKET_PATTERNS:
-                    if re.search(pattern, bracket_content, re.IGNORECASE):
-                        color = self.GREEN
-                        break
+            for pattern in self.SUCCESS_BRACKET_PATTERNS:
+                if re.search(pattern, bracket_content, re.IGNORECASE):
+                    color = self.GREEN
+                    break
             
             # Check ERROR patterns
             if not color:
@@ -251,41 +168,6 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
                 for pattern in self.WARNING_BRACKET_PATTERNS:
                     if re.search(pattern, bracket_content, re.IGNORECASE):
                         color = self.MAGENTA
-                        break
-            
-            # Check PURPLE patterns (LLM_DEBUG)
-            if not color:
-                for pattern in self.PURPLE_BRACKET_PATTERNS:
-                    if re.search(pattern, bracket_content, re.IGNORECASE):
-                        color = self.PURPLE
-                        break
-            
-            # Check AGENT patterns (Agents - BLUE)
-            if not color:
-                for pattern in self.AGENT_BRACKET_PATTERNS:
-                    if re.search(pattern, bracket_content, re.IGNORECASE):
-                        color = self.BLUE
-                        break
-            
-            # Check GOLD patterns (NLP - CLASSIFIER, COT_THOUGHT, WORKFLOW, HITL, PROACTIVE)
-            if not color:
-                for pattern in self.GOLD_BRACKET_PATTERNS:
-                    if re.search(pattern, bracket_content, re.IGNORECASE):
-                        color = self.GOLD
-                        break
-            
-            # Check CYAN patterns (NLP - INTENT, UNDERSTAND, DECOMPOSE, ENHANCE, ROUTER)
-            if not color:
-                for pattern in self.NLP_BRACKET_PATTERNS:
-                    if re.search(pattern, bracket_content, re.IGNORECASE):
-                        color = self.CYAN
-                        break
-            
-            # Check YELLOW patterns (REST_API_MCP, Database calls)
-            if not color:
-                for pattern in self.YELLOW_BRACKET_PATTERNS:
-                    if re.search(pattern, bracket_content, re.IGNORECASE):
-                        color = self.YELLOW
                         break
             
             # Check MCP patterns (MCP keywords - BRIGHT_ORANGE)
@@ -308,9 +190,19 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
         for placeholder, ansi_code in ansi_placeholders.items():
             result = result.replace(placeholder, ansi_code)
         
-        # THUMB RULE: Do NOT colorize text outside brackets
-        # Preserve grey/white combination for all non-bracket text
-        # Removed success keyword coloring in text - only UPPER CASE brackets get colored
+        # Colorize success keywords in text (not in brackets) - AFTER restoring ANSI codes
+        # This ensures we don't colorize within ANSI codes
+        for pattern in self.SUCCESS_TEXT_PATTERNS:
+            # Find matches and colorize them, but skip if they're within ANSI codes
+            matches = list(re.finditer(pattern, result, flags=re.IGNORECASE))
+            # Process matches in reverse order to maintain indices
+            for match in reversed(matches):
+                start, end = match.span()
+                # Check if this match is within an ANSI code
+                before_match = result[:start]
+                # Simple check: if we're inside an ANSI sequence, skip
+                if not re.search(r'\033\[[0-9;]*m[^\033]*$', before_match):
+                    result = result[:start] + self.GREEN + match.group(0) + self.RESET + result[end:]
         
         # Clean up any double RESET codes that might occur
         # But preserve colorlog's RESET codes - only remove duplicates
@@ -357,12 +249,15 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
     
-    # Remove handlers from uvicorn loggers
+    # Remove handlers from uvicorn loggers - do this BEFORE setting up our handler
+    # This ensures uvicorn doesn't override our logging configuration
     for logger_name in ['uvicorn', 'uvicorn.access', 'uvicorn.error', 'fastapi']:
         logger = logging.getLogger(logger_name)
         for handler in logger.handlers[:]:
             logger.removeHandler(handler)
         logger.propagate = True
+        # Reset level to NOTSET so it inherits from root
+        logger.setLevel(logging.NOTSET)
     
     if COLORLOG_AVAILABLE and use_colors:
         handler = colorlog.StreamHandler(sys.stdout)
@@ -384,8 +279,14 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
         root_logger.addHandler(handler)
         root_logger.setLevel(level)
         
-        # Configure uvicorn loggers
-        for logger_name in ['uvicorn', 'uvicorn.access', 'uvicorn.error']:
+        # Configure uvicorn loggers - match hrb_copilot exactly
+        # Set uvicorn.error to WARNING to suppress INFO messages (startup messages)
+        uvicorn_error_logger = logging.getLogger('uvicorn.error')
+        uvicorn_error_logger.setLevel(logging.WARNING)
+        uvicorn_error_logger.propagate = True
+        
+        # Keep uvicorn and uvicorn.access at INFO level for access logs
+        for logger_name in ['uvicorn', 'uvicorn.access']:
             logger = logging.getLogger(logger_name)
             logger.setLevel(level)
             logger.propagate = True

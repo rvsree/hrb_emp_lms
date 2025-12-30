@@ -7,6 +7,7 @@ Or: uvicorn src.app.api.main:app --host 0.0.0.0 --port 8081
 """
 
 import os
+import sys
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -18,10 +19,11 @@ from src.app.common.config.app_logging import setup_logging, get_logger
 from src.app.common.config.config import settings
 
 
-# Load environment variables
+# IMPORTANT: Setup logging BEFORE anything else to ensure colors work
+# This must happen at module import time so uvicorn uses our logging config
 load_dotenv(os.path.join(os.getcwd(), ".env"), override=False)
 
-# Setup logging
+# Setup logging immediately - this must happen before any other imports that use logging
 setup_logging()
 logger = get_logger("app_main")
 
@@ -46,6 +48,14 @@ app.include_router(health_router)
 app.include_router(mcp_router)
 
 logger.info("HRB Employee LMS MCP Server initialized")
+
+
+@app.on_event("startup")
+async def on_startup():
+    """Re-apply logging configuration on startup to ensure uvicorn uses our colors."""
+    # Re-setup logging to ensure uvicorn doesn't override our configuration
+    setup_logging()
+    logger.info("Logging configuration re-applied on startup")
 
 
 def main():
