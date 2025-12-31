@@ -190,19 +190,10 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
         for placeholder, ansi_code in ansi_placeholders.items():
             result = result.replace(placeholder, ansi_code)
         
-        # Colorize success keywords in text (not in brackets) - AFTER restoring ANSI codes
-        # This ensures we don't colorize within ANSI codes
-        for pattern in self.SUCCESS_TEXT_PATTERNS:
-            # Find matches and colorize them, but skip if they're within ANSI codes
-            matches = list(re.finditer(pattern, result, flags=re.IGNORECASE))
-            # Process matches in reverse order to maintain indices
-            for match in reversed(matches):
-                start, end = match.span()
-                # Check if this match is within an ANSI code
-                before_match = result[:start]
-                # Simple check: if we're inside an ANSI sequence, skip
-                if not re.search(r'\033\[[0-9;]*m[^\033]*$', before_match):
-                    result = result[:start] + self.GREEN + match.group(0) + self.RESET + result[end:]
+        # THUMB RULE: Do NOT colorize text outside brackets
+        # Preserve grey/white combination for all non-bracket text
+        # Removed success keyword coloring in text - only UPPER CASE brackets get colored
+        # This matches hrb_copilot behavior exactly
         
         # Clean up any double RESET codes that might occur
         # But preserve colorlog's RESET codes - only remove duplicates
@@ -269,8 +260,8 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
                     "DEBUG": "cyan",
                     "INFO": "white",  # Default white for INFO (gray/white appearance)
                     "WARNING": "yellow",
-                    "ERROR": "red",
-                    "CRITICAL": "red,bg_white",
+                    "ERROR": "white",  # Changed to white - only [ERROR] in brackets will be red
+                    "CRITICAL": "white",  # Changed to white - only [CRITICAL] in brackets will be red
                 },
                 secondary_log_colors={},
                 style="%",
