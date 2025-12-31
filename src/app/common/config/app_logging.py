@@ -32,11 +32,11 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
     Simplified for MCP server use.
     """
     
-    # ANSI color codes - specified colors
-    GREEN = '\033[38;5;77m'      # Soft green (gentle) - Success
-    MAGENTA = '\033[38;5;171m'   # Soft magenta (gentle) - Warnings
-    BRIGHT_ORANGE = '\033[38;5;208m'  # Bright orange - MCP keywords
-    RED = '\033[38;5;203m'       # Soft red (gentle) - Errors
+    # ANSI color codes - using standard 8-bit colors for IntelliJ/Windows terminal compatibility
+    GREEN = '\033[92m'           # Bright green - Success (standard ANSI)
+    MAGENTA = '\033[95m'         # Bright magenta - Warnings (standard ANSI)
+    BRIGHT_ORANGE = '\033[93m'   # Bright yellow/orange - MCP keywords (standard ANSI, closest to orange)
+    RED = '\033[91m'             # Bright red - Errors (standard ANSI)
     RESET = '\033[0m'
     
     # Patterns for text within [square brackets] - RED
@@ -140,9 +140,11 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
             if re.match(r'^\d+[a-z;:]*m$', content) or re.match(r'^\d+[a-z;:]*$', content):
                 return bracket_content
             
-            # Skip common log levels from format string (INFO, DEBUG, WARNING, ERROR, CRITICAL)
-            # These are already colored by colorlog, so preserve them
-            if content in ['INFO', 'DEBUG', 'WARNING', 'ERROR', 'CRITICAL']:
+            # Skip common log levels from format string (INFO, DEBUG, WARNING)
+            # ERROR and CRITICAL are NOT skipped - they should be colored red in brackets
+            # The log level in the format string is already colored by colorlog (now white),
+            # but we DO want to colorize [ERROR] and [CRITICAL] in the message part as red
+            if content in ['INFO', 'DEBUG', 'WARNING']:
                 return bracket_content
             
             # Determine color based on content (case-insensitive matching)
@@ -258,10 +260,10 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
                 datefmt="%Y-%m-%d %H:%M:%S",
                 log_colors={
                     "DEBUG": "cyan",
-                    "INFO": "white",  # Default white for INFO (gray/white appearance)
+                    "INFO": "bold_white",  # Use bold_white for better compatibility with IntelliJ/Windows terminals
                     "WARNING": "yellow",
-                    "ERROR": "white",  # Changed to white - only [ERROR] in brackets will be red
-                    "CRITICAL": "white",  # Changed to white - only [CRITICAL] in brackets will be red
+                    "ERROR": "bold_white",  # Use bold_white - only [ERROR] in brackets will be red
+                    "CRITICAL": "bold_white",  # Use bold_white - only [CRITICAL] in brackets will be red
                 },
                 secondary_log_colors={},
                 style="%",
