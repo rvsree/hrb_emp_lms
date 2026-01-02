@@ -16,7 +16,7 @@ Also skips ANSI codes like [37m, [0m, [31m, etc.
 import logging
 import sys
 import re
-from typing import Optional
+from typing import Optional, Dict
 
 try:
     import colorlog
@@ -227,14 +227,16 @@ class EnhancedColoredFormatter(colorlog.ColoredFormatter if COLORLOG_AVAILABLE e
         return formatted
 
 
-def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
+def setup_logging(level: int = logging.INFO, use_colors: bool = True, component_levels: Optional[Dict[str, int]] = None) -> None:
     """
     Setup enhanced logging with color schemes for [brackets] only.
     Preserves colorlog's default gray/white formatting for entire lines.
     
     Args:
-        level: Logging level (default: INFO)
+        level: Root logging level (default: INFO)
         use_colors: Enable color output (default: True)
+        component_levels: Optional dict mapping component names to log levels.
+                         Example: {"uvicorn": logging.WARNING, "mcp_controller": logging.WARNING}
     """
     root_logger = logging.getLogger()
     
@@ -244,7 +246,7 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
     
     # Remove handlers from uvicorn loggers - do this BEFORE setting up our handler
     # This ensures uvicorn doesn't override our logging configuration
-    for logger_name in ['uvicorn', 'uvicorn.access', 'uvicorn.error', 'fastapi']:
+    for logger_name in ['uvicorn', 'uvicorn.access', 'uvicorn.error', 'fastapi', 'mcp_controller']:
         logger = logging.getLogger(logger_name)
         for handler in logger.handlers[:]:
             logger.removeHandler(handler)
@@ -253,6 +255,7 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
         logger.setLevel(logging.NOTSET)
     
     if COLORLOG_AVAILABLE and use_colors:
+        # Use sys.stdout to ensure colors work in IntelliJ console
         handler = colorlog.StreamHandler(sys.stdout)
         handler.setFormatter(
             EnhancedColoredFormatter(
@@ -260,10 +263,10 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
                 datefmt="%Y-%m-%d %H:%M:%S",
                 log_colors={
                     "DEBUG": "cyan",
-                    "INFO": "bold_white",  # Use bold_white for better compatibility with IntelliJ/Windows terminals
+                    "INFO": "white",  # Changed from bold_white - white works better in IntelliJ
                     "WARNING": "yellow",
-                    "ERROR": "bold_white",  # Use bold_white - only [ERROR] in brackets will be red
-                    "CRITICAL": "bold_white",  # Use bold_white - only [CRITICAL] in brackets will be red
+                    "ERROR": "red",  # Changed from bold_white - red shows errors clearly
+                    "CRITICAL": "red,bg_white",
                 },
                 secondary_log_colors={},
                 style="%",
@@ -272,16 +275,29 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
         root_logger.addHandler(handler)
         root_logger.setLevel(level)
         
-        # Configure uvicorn loggers - match hrb_copilot exactly
-        # Set uvicorn.error to WARNING to suppress INFO messages (startup messages)
-        uvicorn_error_logger = logging.getLogger('uvicorn.error')
-        uvicorn_error_logger.setLevel(logging.WARNING)
-        uvicorn_error_logger.propagate = True
+        # Diagnostic: Log if colorlog is working (only in dev mode)
+        if level <= logging.DEBUG:
+            test_logger = logging.getLogger("colorlog_test")
+            test_logger.debug("Colorlog diagnostic: If you see colors, colorlog is working")
         
-        # Keep uvicorn and uvicorn.access at INFO level for access logs
-        for logger_name in ['uvicorn', 'uvicorn.access']:
+        # Configure component loggers with component-specific levels if provided
+        component_loggers = {
+            'uvicorn': level,
+            'uvicorn.access': level,
+            'uvicorn.error': logging.WARNING,  # Default: suppress uvicorn.error INFO
+            'fastapi': level,
+            'mcp_controller': level,
+        }
+        
+        # Override with component-specific levels if provided
+        if component_levels:
+            for component, comp_level in component_levels.items():
+                if component in component_loggers:
+                    component_loggers[component] = comp_level
+        
+        for logger_name, logger_level in component_loggers.items():
             logger = logging.getLogger(logger_name)
-            logger.setLevel(level)
+            logger.setLevel(logger_level)
             logger.propagate = True
     else:
         # Fallback to basic logging
@@ -291,6 +307,12 @@ def setup_logging(level: int = logging.INFO, use_colors: bool = True) -> None:
             datefmt="%Y-%m-%d %H:%M:%S",
         )
         root_logger.setLevel(level)
+        
+        # Apply component-specific levels if provided
+        if component_levels:
+            for component, comp_level in component_levels.items():
+                logger = logging.getLogger(component)
+                logger.setLevel(comp_level)
 
 
 def get_logger(name: Optional[str] = None) -> logging.Logger:

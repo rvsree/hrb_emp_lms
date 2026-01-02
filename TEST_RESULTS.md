@@ -64,3 +64,5 @@ curl -X POST http://localhost:8081/api/hrb/lms/mcp \
 
 All 6 MCP tools are functional and return proper JSON-RPC 2.0 responses. The server is ready to be registered in hrb_copilot's MCP registry.
 
+
+

@@ -5,14 +5,19 @@ PostgreSQL Database Client for Agent Memory.
 This module provides functions for:
 - Database connection management
 - Schema initialization for agent memory tables
-- Long-Term Memory (LTM) CRUD operations
-- Entity Memory CRUD operations
-- Conversation history operations
+- Long-Term Memory (LTM) CRUD operations (UNUSED in hrb_emp_lms)
+- Entity Memory CRUD operations (UNUSED in hrb_emp_lms)
+- Conversation history operations (UNUSED in hrb_emp_lms)
+
+NOTE: LTM/Entity/Conversation functions are marked as UNUSED because:
+- hrb_emp_lms MCP server uses SQLAlchemy ORM models (database.py) for data access
+- Services (LeaveBalanceService, LeaveRequestService, HitlService) use SQLAlchemy
+- Only postgres_health_check() is actively used by the health endpoint
 
 Tables managed:
-- agent_ltm: Long-term memory storage
-- agent_entities: Named entity memory
-- agent_conversations: Conversation history (for analytics)
+- agent_ltm: Long-term memory storage (not used by current MCP implementation)
+- agent_entities: Named entity memory (not used by current MCP implementation)
+- agent_conversations: Conversation history (not used by current MCP implementation)
 """
 
 import os
@@ -269,6 +274,9 @@ def _sql(name: str) -> str:
 # ---------------------------------------------------------------------------
 # Long-Term Memory (LTM) Operations
 # ---------------------------------------------------------------------------
+# UNUSED: These functions are not used by hrb_emp_lms MCP server.
+# Services use SQLAlchemy ORM (database.py) instead of direct psycopg.
+# TODO: Remove if agent memory features are not planned.
 
 
 def insert_ltm_memory(
@@ -368,6 +376,9 @@ def delete_ltm_memory(memory_id: str) -> bool:
 # ---------------------------------------------------------------------------
 # Entity Memory Operations
 # ---------------------------------------------------------------------------
+# UNUSED: These functions are not used by hrb_emp_lms MCP server.
+# Services use SQLAlchemy ORM (database.py) instead of direct psycopg.
+# TODO: Remove if agent memory features are not planned.
 
 
 def upsert_entity(
@@ -505,6 +516,9 @@ def get_entity_by_name(entity_name: str) -> Optional[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Conversation History Operations
 # ---------------------------------------------------------------------------
+# UNUSED: These functions are not used by hrb_emp_lms MCP server.
+# Services use SQLAlchemy ORM (database.py) instead of direct psycopg.
+# TODO: Remove if agent memory features are not planned.
 
 
 def insert_conversation_message(
